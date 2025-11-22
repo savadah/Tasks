@@ -1,192 +1,214 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 
-public class Heap<T> where T : IComparable<T>
+namespace ConsoleApp4
 {
-    private List<T> items;
-    private bool isMaxHeap;
-
-    public int Count => items.Count;
-    public bool IsEmpty => items.Count == 0;
-
-    public Heap(T[] array = null, bool isMaxHeap = true)
+    public class Heap<T> where T : IComparable<T>
     {
-        this.items = new List<T>();
-        this.isMaxHeap = isMaxHeap;
+        private T[] data;
+        private int size;
 
-        if (array != null)
+        public int Count
         {
-            foreach (T item in array)
-            {
-                items.Add(item);
-            }
+            get { return size; }
+        }
 
-            for (int i = items.Count / 2 - 1; i >= 0; i--)
+        public bool Empty
+        {
+            get { return size == 0; }
+        }
+
+        public Heap(int capacity = 10)
+        {
+            data = new T[capacity];
+            size = 0;
+        }
+
+        public Heap(T[] array)
+        {
+            if (array == null)
+                throw new ArgumentException("Массив не может быть null");
+
+            data = new T[array.Length];
+            Array.Copy(array, data, array.Length);
+            size = array.Length;
+
+            BuildHeap();
+        }
+
+        public T FindMax()
+        {
+            if (Empty)
+                throw new InvalidOperationException("Куча пуста");
+            return data[0];
+        }
+
+        public T ExtractMax()
+        {
+            if (Empty)
+                throw new InvalidOperationException("Куча пуста");
+
+            T max = data[0];
+            data[0] = data[size - 1];
+            size--;
+            SiftDown(0);
+            return max;
+        }
+
+        public void Insert(T value)
+        {
+            EnsureCapacity();
+            data[size] = value;
+            size++;
+            SiftUp(size - 1);
+        }
+
+        public void Update(int index, T newValue)
+        {
+            if (index < 0 || index >= size)
+                throw new IndexOutOfRangeException("Индекс вне диапазона");
+
+            T oldValue = data[index];
+            data[index] = newValue;
+
+            if (newValue.CompareTo(oldValue) > 0)
+                SiftUp(index);
+            else
+                SiftDown(index);
+        }
+
+        public Heap<T> Combine(Heap<T> other)
+        {
+            if (other == null)
+                throw new ArgumentException("Другая куча не может быть null");
+
+            int totalSize = this.size + other.size;
+            T[] combined = new T[totalSize];
+
+            Array.Copy(this.data, 0, combined, 0, this.size);
+            Array.Copy(other.data, 0, combined, this.size, other.size);
+
+            return new Heap<T>(combined);
+        }
+
+        private void BuildHeap()
+        {
+            for (int i = size / 2 - 1; i >= 0; i--)
             {
                 SiftDown(i);
             }
         }
-    }
 
-    public T Peek()
-    {
-        if (IsEmpty)
-            throw new InvalidOperationException("Куча пуста");
-
-        return items[0];
-    }
-
-    public T Extract()
-    {
-        if (IsEmpty)
-            throw new InvalidOperationException("Куча пуста");
-
-        T result = items[0];
-        items[0] = items[items.Count - 1];
-        items.RemoveAt(items.Count - 1);
-
-        if (!IsEmpty)
-            SiftDown(0);
-
-        return result;
-    }
-
-    public void ChangeKey(int index, T newValue)
-    {
-        if (index < 0 || index >= items.Count)
-            throw new ArgumentOutOfRangeException("Неверный индекс");
-
-        T oldValue = items[index];
-        items[index] = newValue;
-
-        if (ShouldMoveUp(newValue, oldValue))
-            SiftUp(index);
-        else
-            SiftDown(index);
-    }
-
-    public void Add(T item)
-    {
-        items.Add(item);
-        SiftUp(items.Count - 1);
-    }
-
-    public Heap<T> Merge(Heap<T> other)
-    {
-        if (other == null)
-            throw new ArgumentNullException("Другая куча не может быть null");
-
-        var newHeap = new Heap<T>(isMaxHeap: this.isMaxHeap);
-
-        foreach (T item in this.items)
+        private void SiftUp(int position)
         {
-            newHeap.Add(item);
+            int current = position;
+
+            while (current > 0)
+            {
+                int parent = (current - 1) / 2;
+
+                if (data[parent].CompareTo(data[current]) >= 0)
+                    break;
+
+                Swap(current, parent);
+                current = parent;
+            }
         }
 
-        foreach (T item in other.items)
+        private void SiftDown(int position)
         {
-            newHeap.Add(item);
+            int current = position;
+
+            while (HasLeftChild(current))
+            {
+                int maxChild = GetLeftChildIndex(current);
+
+                if (HasRightChild(current) &&
+                    data[GetRightChildIndex(current)].CompareTo(data[maxChild]) > 0)
+                {
+                    maxChild = GetRightChildIndex(current);
+                }
+
+                if (data[current].CompareTo(data[maxChild]) >= 0)
+                    break;
+
+                Swap(current, maxChild);
+                current = maxChild;
+            }
         }
 
-        return newHeap;
-    }
-
-    private void SiftUp(int index)
-    {
-        while (index > 0)
+        private bool HasLeftChild(int index)
         {
-            int parentIndex = (index - 1) / 2;
-
-            if (IsCorrectOrder(parentIndex, index))
-                break;
-
-            Swap(index, parentIndex);
-            index = parentIndex;
+            return GetLeftChildIndex(index) < size;
         }
-    }
 
-    private void SiftDown(int index)
-    {
-        while (true)
+        private bool HasRightChild(int index)
         {
-            int leftChild = 2 * index + 1;
-            int rightChild = 2 * index + 2;
-            int selectedChild = index;
+            return GetRightChildIndex(index) < size;
+        }
 
-            if (leftChild < items.Count && !IsCorrectOrder(selectedChild, leftChild))
-                selectedChild = leftChild;
+        private int GetLeftChildIndex(int index)
+        {
+            return 2 * index + 1;
+        }
 
-            if (rightChild < items.Count && !IsCorrectOrder(selectedChild, rightChild))
-                selectedChild = rightChild;
+        private int GetRightChildIndex(int index)
+        {
+            return 2 * index + 2;
+        }
 
-            if (selectedChild == index)
-                break;
+        private void Swap(int i, int j)
+        {
+            T temp = data[i];
+            data[i] = data[j];
+            data[j] = temp;
+        }
 
-            Swap(index, selectedChild);
-            index = selectedChild;
+        private void EnsureCapacity()
+        {
+            if (size == data.Length)
+            {
+                int newCapacity = data.Length * 2;
+                T[] newData = new T[newCapacity];
+                Array.Copy(data, newData, size);
+                data = newData;
+            }
+        }
+
+        public void Display()
+        {
+            Console.Write("Элементы кучи: ");
+            for (int i = 0; i < size; i++)
+            {
+                Console.Write(data[i] + " ");
+            }
+            Console.WriteLine();
         }
     }
 
-    private bool IsCorrectOrder(int firstIndex, int secondIndex)
+    class Program
     {
-        return IsCorrectOrder(items[firstIndex], items[secondIndex]);
-    }
+        static void Main()
+        {
+            Console.WriteLine("Тестирование Max-кучи");
 
-    private bool IsCorrectOrder(T first, T second)
-    {
-        int comparison = first.CompareTo(second);
-        return isMaxHeap ? comparison >= 0 : comparison <= 0;
-    }
+            int[] numbers = { 3, 1, 6, 5, 2, 4 };
+            var maxHeap = new Heap<int>(numbers);
+            maxHeap.Display();
+            Console.WriteLine("Максимум: " + maxHeap.FindMax());
 
-    private bool ShouldMoveUp(T newValue, T oldValue)
-    {
-        return IsCorrectOrder(newValue, oldValue);
-    }
+            maxHeap.Insert(8);
+            maxHeap.Display();
 
-    private void Swap(int i, int j)
-    {
-        T temp = items[i];
-        items[i] = items[j];
-        items[j] = temp;
-    }
+            Console.WriteLine("Извлечен: " + maxHeap.ExtractMax());
+            maxHeap.Display();
 
-    public override string ToString()
-    {
-        return string.Join(", ", items);
-    }
-}
+            maxHeap.Update(2, 10);
+            maxHeap.Display();
 
-class Program
-{
-    static void Main()
-    {
-        Console.WriteLine(" Демонстрация Max-кучи ");
-
-        int[] numbers = { 3, 1, 6, 5, 2, 4 };
-        var maxHeap = new Heap<int>(numbers, true);
-
-        Console.WriteLine($"Куча: {maxHeap}");
-        Console.WriteLine($"Максимум: {maxHeap.Peek()}");
-
-        maxHeap.Add(8);
-        Console.WriteLine($"После добавления 8: {maxHeap}");
-
-        Console.WriteLine($"Удаляем: {maxHeap.Extract()}");
-        Console.WriteLine($"Теперь куча: {maxHeap}");
-
-        maxHeap.ChangeKey(2, 10);
-        Console.WriteLine($"После изменения: {maxHeap}");
-
-        Console.WriteLine("\n=== Демонстрация Min-кучи ===");
-        var minHeap = new Heap<int>(isMaxHeap: false);
-        minHeap.Add(5);
-        minHeap.Add(2);
-        minHeap.Add(8);
-        minHeap.Add(1);
-
-        Console.WriteLine($"Min-куча: {minHeap}");
-        Console.WriteLine($"Минимум: {minHeap.Peek()}");
-        Console.WriteLine($"Удаляем: {minHeap.Extract()}");
-        Console.WriteLine($"Теперь минимум: {minHeap.Peek()}");
+            Console.WriteLine("\nТестирование со строками");
+            var stringHeap = new Heap<string>(new string[] { "apple", "banana", "cherry" });
+            stringHeap.Display();
+            Console.WriteLine("Максимум: " + stringHeap.FindMax());
+        }
     }
 }
