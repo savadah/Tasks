@@ -1,6 +1,6 @@
 using System;
 
-namespace ConsoleApp4
+namespace ConsoleApp5
 {
     public class Heap<T> where T : IComparable<T>
     {
@@ -15,12 +15,6 @@ namespace ConsoleApp4
         public bool Empty
         {
             get { return size == 0; }
-        }
-
-        public Heap(int capacity = 10)
-        {
-            data = new T[capacity];
-            size = 0;
         }
 
         public Heap(T[] array)
@@ -62,7 +56,7 @@ namespace ConsoleApp4
             SiftUp(size - 1);
         }
 
-        public void Update(int index, T newValue)
+        public void IncreaseKey(int index, T newValue)
         {
             if (index < 0 || index >= size)
                 throw new IndexOutOfRangeException("Индекс вне диапазона");
@@ -174,7 +168,7 @@ namespace ConsoleApp4
             }
         }
 
-        public void Display()
+        public void PrintHeap()
         {
             Console.Write("Элементы кучи: ");
             for (int i = 0; i < size; i++)
@@ -193,22 +187,42 @@ namespace ConsoleApp4
 
             int[] numbers = { 3, 1, 6, 5, 2, 4 };
             var maxHeap = new Heap<int>(numbers);
-            maxHeap.Display();
+            maxHeap.PrintHeap();
             Console.WriteLine("Максимум: " + maxHeap.FindMax());
 
-            maxHeap.Insert(8);
-            maxHeap.Display();
+            Console.WriteLine("Введите элемент для добавления:");
+            int val = int.Parse(Console.ReadLine());
+
+            Console.WriteLine($"Добавим элемент {val}");
+            maxHeap.Insert(val);
+            maxHeap.PrintHeap();
 
             Console.WriteLine("Извлечен: " + maxHeap.ExtractMax());
-            maxHeap.Display();
+            maxHeap.PrintHeap();
 
-            maxHeap.Update(2, 10);
-            maxHeap.Display();
+            maxHeap.IncreaseKey(2, 10);
+            maxHeap.PrintHeap();
+
+            Console.WriteLine("\n Слияние куч");
+            var heap1 = new Heap<int>(new int[] { 10, 8, 5 });
+            var heap2 = new Heap<int>(new int[] { 12, 9, 7 });
+
+            Console.WriteLine("Куча 1:");
+            heap1.PrintHeap();
+            Console.WriteLine("Куча 2:");
+            heap2.PrintHeap();
+
+            var mergeHeap = heap1.Combine(heap2);
+            Console.WriteLine("После сравнения");
+            mergeHeap.PrintHeap();
+            Console.WriteLine("Максимум объединенной кучи: " + mergeHeap.FindMax());
 
             Console.WriteLine("\nТестирование со строками");
             var stringHeap = new Heap<string>(new string[] { "apple", "banana", "cherry" });
-            stringHeap.Display();
+            stringHeap.PrintHeap();
             Console.WriteLine("Максимум: " + stringHeap.FindMax());
         }
     }
 }
+}
+
