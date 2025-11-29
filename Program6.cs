@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 public class MyPriorityQueue<T>
@@ -262,7 +262,6 @@ public class MyPriorityQueue<T>
         return result;
     }
 
-    // Вспомогательные методы
     private void EnsureCapacity()
     {
         if (size == queue.Length)
@@ -340,8 +339,6 @@ class Program
 {
     static void Main()
     {
-        Console.WriteLine("=== ДЕМОНСТРАЦИЯ ВСЕХ 5 КОНСТРУКТОРОВ ===\n");
-
         // 1. Конструктор MyPriorityQueue() - пустая очередь с ёмкостью 11
         Console.WriteLine("1. Конструктор MyPriorityQueue():");
         var queue1 = new MyPriorityQueue<int>();
@@ -390,15 +387,15 @@ class Program
 
         // 4. Конструктор с компаратором
         Console.WriteLine("4. Конструктор MyPriorityQueue(int initialCapacity, IComparer<T> comparator):");
-        var queue4 = new MyPriorityQueue<int>(10, Comparer<int>.Default);
-        Console.WriteLine($"   Создана очередь с обратным компаратором (max-куча)");
+        var MaxCorparer = Comparer<int>.Create((x, y) => y.CompareTo(x));
+        var queue4 = new MyPriorityQueue<int>(10, MaxCorparer);
 
         queue4.Add(5);
         queue4.Add(3);
         queue4.Add(8);
         queue4.Add(1);
         Console.WriteLine($"   Добавлены элементы: [5, 3, 8, 1]");
-        Console.WriteLine($"   Peek(): {queue4.Peek()} (максимум, а не минимум!)");
+        Console.WriteLine($"   Peek(): {queue4.Peek()} (максимум)");
         Console.WriteLine($"   Size(): {queue4.Size()}");
         Console.WriteLine();
 
@@ -415,8 +412,8 @@ class Program
         // Копия
         queue5.Poll();
         Console.WriteLine($"   После удаления из копии:");
-        Console.WriteLine($"   Оригинал Size(): {originalQueue.Size()} (не изменился)");
-        Console.WriteLine($"   Копия Size(): {queue5.Size()} (уменьшился)");
+        Console.WriteLine($"   Оригинал Size(): {originalQueue.Size()}");
+        Console.WriteLine($"   Копия Size(): {queue5.Size()}");
         Console.WriteLine();
 
         // Тестовая очередь для демонстрации
