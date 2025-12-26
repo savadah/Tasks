@@ -100,16 +100,6 @@ class Program
             int digits = 0;
 
             if (i >= end || !IsDigit(s[i])) return false;
-
-            if (s[i] == '0')
-            {
-                value = 0;
-                digits = 1;
-                i++;
-
-                if (i < end && IsDigit(s[i])) return false;
-            }
-            else
             {
                 while (i < end && IsDigit(s[i]))
                 {
@@ -191,3 +181,4 @@ class Program
         File.WriteAllLines("output.txt", outLines);
     }
 }
+
